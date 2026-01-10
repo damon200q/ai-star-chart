@@ -3,642 +3,651 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 星盘占卜 Pro - 洞悉灵魂蓝图</title>
+    <title>星魂占卜 · 揭秘你的宇宙蓝图</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Serif+SC:wght@400;700&family=Playfair+Display:wght@700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        /* ==================== 
-           CSS 变量与基础重置 
-           ==================== */
+        /* ==================== CSS 核心样式 ==================== */
         :root {
             --gold: #FFD700;
-            --purple-deep: #240b36;
-            --purple-light: #c31432;
-            --glass-bg: rgba(20, 20, 30, 0.65);
+            --purple-deep: #1a0b2e;
+            --glass-bg: rgba(20, 20, 35, 0.7);
             --glass-border: 1px solid rgba(255, 255, 255, 0.15);
-            --neon-glow: 0 0 10px rgba(255, 215, 0, 0.5);
+            --accent-pink: #ff00cc;
+            --font-en-serif: 'Cormorant Garamond', serif;
+            --font-cn-serif: 'Noto Serif SC', serif;
+            --font-sans: 'Roboto', sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: var(--font-sans);
             color: #fff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            transition: background-image 1s ease;
+            transition: background 1s ease;
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
 
-        /* --- 动态背景模式 --- */
-        /* 夜晚模式 (默认): 深空 */
+        /* 字体类切换 */
+        body.lang-cn .serif { font-family: var(--font-cn-serif); }
+        body.lang-en .serif { font-family: var(--font-en-serif); letter-spacing: 1px; }
+
+        /* --- 动态背景 --- */
         body.night-mode {
-            background-image: 
-                linear-gradient(to bottom, rgba(15, 12, 41, 0.8), rgba(48, 43, 99, 0.7), rgba(36, 36, 62, 0.8)),
-                url('https://images.unsplash.com/photo-1464802686167-b93944301adf?q=80&w=2069&auto=format&fit=crop');
+            background-image: linear-gradient(to bottom, rgba(15, 12, 41, 0.9), rgba(48, 43, 99, 0.8)), url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2072&auto=format&fit=crop');
         }
-        
-        /* 白天模式: 紫色云层 */
         body.day-mode {
-            background-image: 
-                linear-gradient(to bottom, rgba(78, 84, 200, 0.6), rgba(143, 148, 251, 0.6)),
-                url('https://images.pexels.com/photos/1287142/pexels-photo-1287142.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+            background-image: linear-gradient(to bottom, rgba(100, 65, 165, 0.7), rgba(42, 8, 69, 0.8)), url('https://images.pexels.com/photos/2098428/pexels-photo-2098428.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
         }
 
-        /* 星星动画容器 */
-        .stars-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 0;
-            background: transparent;
-        }
-        .star {
-            position: absolute; background: white; border-radius: 50%;
-            animation: twinkle var(--duration) ease-in-out infinite;
-        }
+        /* 星星动画 */
+        .stars-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) ease-in-out infinite; }
         @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 
-        /* --- 布局容器 --- */
+        /* --- 语言切换器 --- */
+        .lang-switch {
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+        }
+        .lang-btn {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+            padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.8rem;
+        }
+        .lang-btn:hover, .lang-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+        /* --- 主容器 --- */
         .container {
-            width: 90%; max-width: 650px;
-            margin: 40px auto; padding-bottom: 80px;
+            width: 90%; max-width: 600px; margin: 60px auto; padding-bottom: 80px;
             text-align: center; z-index: 2; position: relative;
         }
 
-        h1, h2, h3 { font-family: 'Playfair Display', serif; }
-        
         h1 {
-            font-size: 2.4rem; margin-bottom: 10px;
-            background: linear-gradient(to right, #fff, var(--gold));
+            font-size: 2.2rem; margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #ffd700);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(157, 78, 221, 0.5);
+            text-shadow: 0 0 20px rgba(157, 78, 221, 0.6);
         }
+        .subtitle { font-size: 1rem; color: rgba(255,255,255,0.85); margin-bottom: 30px; font-weight: 300; }
 
-        .subtitle { color: rgba(255,255,255,0.8); margin-bottom: 30px; font-weight: 300; letter-spacing: 1px; }
-
-        /* --- 卡片通用样式 --- */
+        /* --- 卡片样式 --- */
         .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: var(--glass-border); border-radius: 16px;
-            padding: 30px; margin-bottom: 25px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: var(--glass-border); border-radius: 16px; padding: 25px; margin-bottom: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); transition: transform 0.3s;
         }
-
-        /* --- 表单样式 --- */
+        
+        /* 表单元素 */
         .input-group { text-align: left; margin-bottom: 15px; }
-        label { color: var(--gold); font-size: 0.85rem; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px;}
+        label { color: var(--gold); font-size: 0.8rem; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: 1px;}
         input {
             width: 100%; padding: 12px; background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
             color: #fff; font-size: 1rem; outline: none; transition: 0.3s;
         }
-        input:focus { border-color: var(--gold); box-shadow: 0 0 8px rgba(255, 215, 0, 0.2); }
+        input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
 
         .btn-main {
-            width: 100%; padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none; border-radius: 50px;
-            color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
+            width: 100%; padding: 14px; margin-top: 10px;
+            background: linear-gradient(135deg, #333399 0%, #ff00cc 100%);
+            border: none; border-radius: 50px; color: white; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 204, 0.3); transition: 0.3s;
         }
-        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(118, 75, 162, 0.5); }
-        .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.3); margin-top: 15px; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 204, 0.5); }
 
-        /* --- 星盘轮盘可视化 (核心升级) --- */
-        .chart-container {
-            width: 280px; height: 280px; margin: 0 auto 30px auto;
-            position: relative;
+        /* --- 星盘 SVG 可视化 --- */
+        .chart-wrapper {
+            width: 300px; height: 300px; margin: 0 auto 30px auto; position: relative;
         }
-        /* SVG 旋转动画 */
-        .zodiac-wheel {
-            width: 100%; height: 100%;
-            animation: slow-rotate 120s linear infinite;
-        }
-        @keyframes slow-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .zodiac-svg { width: 100%; height: 100%; animation: rotate-slow 120s linear infinite; }
+        @keyframes rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* 行星定位层 - 不随轮盘旋转，而是根据度数定位 */
-        .planet-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* 让鼠标能穿透点击下面的元素 */
-        }
-        
+        /* 行星图标样式 */
         .planet-marker {
-            position: absolute; top: 50%; left: 50%;
-            width: 2px; height: 50%; /* 半径长度 */
-            transform-origin: top center; /* 以中心旋转 */
-            pointer-events: none;
+            position: absolute; top: 50%; left: 50%; width: 2px; height: 50%; /* 半径 */
+            transform-origin: top center; pointer-events: none;
         }
-        
         .planet-icon {
-            position: absolute; bottom: 0; left: -12px;
-            width: 24px; height: 24px;
-            background: #fff; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; color: #000; font-weight: bold;
-            box-shadow: 0 0 10px rgba(255,255,255,0.8);
-            cursor: pointer; pointer-events: auto; /* 恢复交互 */
-            transition: transform 0.3s;
+            position: absolute; bottom: 0; left: -10px; width: 20px; height: 20px;
+            background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; cursor: pointer; pointer-events: auto;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8); transition: 0.3s;
         }
-        .planet-icon.sun { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
-        .planet-icon.moon { background: #E0E0E0; }
-        .planet-icon.rising { background: #9d4edd; color: #fff; border: 1px solid #fff;}
-
+        .planet-icon:hover { transform: scale(1.5); z-index: 100; box-shadow: 0 0 15px var(--gold); }
+        
         /* Tooltip */
-        .tooltip {
-            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.9); padding: 8px 12px; border-radius: 6px;
-            font-size: 0.75rem; color: #fff; white-space: nowrap; opacity: 0;
-            transition: opacity 0.3s; pointer-events: none; border: 1px solid var(--gold);
-            z-index: 10;
+        .astro-tooltip {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.9); border: 1px solid var(--gold); padding: 8px 12px;
+            border-radius: 6px; font-size: 0.8rem; color: #fff; width: 180px; text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 200;
         }
-        .planet-icon:hover .tooltip { opacity: 1; }
-        .planet-icon:hover { transform: scale(1.3); z-index: 20; }
+        .planet-icon:hover .astro-tooltip { opacity: 1; }
 
-        /* --- 结果展示 --- */
-        #result-section { display: none; opacity: 0; transition: opacity 0.8s ease; }
+        /* --- 结果 & Premium --- */
+        #result-section { display: none; opacity: 0; transition: opacity 1s; }
         .fade-in { opacity: 1 !important; }
 
-        .astro-row {
-            display: flex; align-items: center; margin-bottom: 15px;
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;
-            border-left: 3px solid var(--gold); text-align: left;
+        .premium-lock-area {
+            position: relative; overflow: hidden; background: linear-gradient(135deg, #141E30, #243B55);
+            border: 1px solid var(--accent-pink); padding: 0;
         }
-        .astro-icon { font-size: 2rem; margin-right: 15px; width: 40px; text-align: center; }
-        .astro-content h4 { color: var(--gold); margin-bottom: 4px; }
-        .astro-content p { font-size: 0.9rem; color: #ddd; line-height: 1.4; }
-
-        /* --- Premium 区域 --- */
-        .premium-gate {
-            position: relative; overflow: hidden;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border: 1px solid #e94560;
-        }
-        .blur-content { filter: blur(6px); user-select: none; opacity: 0.6; }
-        
-        .premium-overlay {
+        .blur-preview { filter: blur(8px); opacity: 0.5; padding: 20px; user-select: none; }
+        .lock-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.6); z-index: 5;
         }
         
-        .btn-unlock {
-            background: linear-gradient(45deg, #FF512F, #DD2476);
-            border: none; padding: 12px 30px; color: white; border-radius: 30px;
-            font-weight: bold; font-size: 1rem; cursor: pointer;
-            animation: pulse 2s infinite; margin-top: 10px;
+        .btn-premium {
+            background: linear-gradient(45deg, #F7971E, #FFD200);
+            color: #000; border: none; padding: 12px 30px; border-radius: 30px;
+            font-weight: bold; cursor: pointer; animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(221, 36, 118, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(221, 36, 118, 0); } 100% { box-shadow: 0 0 0 0 rgba(221, 36, 118, 0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Premium 解锁后 */
-        #premium-content { display: none; margin-top: 20px; }
-        
-        .compatibility-form {
-            background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;
-        }
-        
-        /* Loading */
+        /* 兼容性测试区 */
+        .match-card { background: rgba(255,255,255,0.05); padding: 15px; margin-top: 15px; border-radius: 10px; }
+
+        /* Loader */
         .loader {
-            display: none; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--gold);
-            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto;
+            display: none; width: 40px; height: 40px; margin: 20px auto;
+            border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid var(--gold);
+            border-radius: 50%; animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 移动端适配 */
-        @media (max-width: 480px) {
-            .container { width: 95%; margin-top: 20px; }
-            h1 { font-size: 1.8rem; }
-        }
+        /* 移动端 */
+        @media (max-width: 480px) { h1 { font-size: 1.8rem; } }
     </style>
 </head>
-<body>
+<body class="lang-cn">
 
     <div class="stars-overlay" id="stars-container"></div>
 
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="changeLang('cn')">中文</button>
+        <button class="lang-btn" onclick="changeLang('en')">EN</button>
+    </div>
+
     <div class="container">
-        <header id="header-area">
-            <h1>AI 星盘占卜 Pro</h1>
-            <p class="subtitle">连接宇宙 API · 解锁生命密码</p>
+        <header>
+            <h1 class="serif" id="i18n-title">星魂占卜 · 揭秘你的宇宙蓝图 ✨</h1>
+            <p class="subtitle" id="i18n-subtitle">输入生日，AI解析你的灵魂·桃花·命运</p>
         </header>
 
         <div class="glass-card" id="input-card">
-            <h3 style="margin-bottom: 20px; color: #ddd;">输入你的出生信息</h3>
             <form id="astro-form">
                 <div class="input-group">
-                    <label>姓名</label>
-                    <input type="text" id="username" placeholder="你的名字">
+                    <label id="lbl-name">你的名字</label>
+                    <input type="text" id="username" placeholder="Name">
                 </div>
                 <div class="input-group">
-                    <label>出生日期 (必填)</label>
+                    <label id="lbl-dob">出生日期</label>
                     <input type="date" id="birthdate" required>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <div class="input-group" style="flex:1">
-                        <label>出生时间</label>
+                        <label id="lbl-time">出生时间 (重要)</label>
                         <input type="time" id="birthtime">
                     </div>
                     <div class="input-group" style="flex:1">
-                        <label>出生城市</label>
-                        <input type="text" id="city" placeholder="例如: 上海">
+                        <label id="lbl-city">城市</label>
+                        <input type="text" id="city" placeholder="City">
                     </div>
                 </div>
-                <p style="font-size: 0.7rem; color: #aaa; margin-bottom: 15px; text-align: left;">
-                    * 出生时间越精确，上升星座和宫位计算越准确。
-                </p>
-                <button type="submit" class="btn-main">✨ 连线宇宙数据库 ✨</button>
+                
+                <button type="submit" class="btn-main" id="btn-submit">✨ 揭开命运面纱 ✨</button>
             </form>
             <div class="loader" id="loader"></div>
         </div>
 
         <div id="result-section">
-            
-            <h2 style="color: var(--gold); margin-bottom: 20px;">🔮 <span id="res-name"></span> 的星盘报告</h2>
+            <h2 class="serif" style="color: var(--gold); margin-bottom: 20px;">
+                <span id="res-name-display"></span> <span id="i18n-report-title">的星盘报告</span>
+            </h2>
 
-            <div class="glass-card" style="padding: 10px;">
-                <div class="chart-container">
-                    <svg class="zodiac-wheel" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="48" stroke="#ffffff" stroke-width="0.5" fill="none" opacity="0.3"/>
-                        <circle cx="50" cy="50" r="35" stroke="#9d4edd" stroke-width="0.2" fill="none" opacity="0.2"/>
-                        <line x1="50" y1="2" x2="50" y2="98" stroke="white" opacity="0.2" />
-                        <line x1="2" y1="50" x2="98" y2="50" stroke="white" opacity="0.2" />
-                        <line x1="26" y1="8.5" x2="74" y2="91.5" stroke="white" opacity="0.2" /> <line x1="74" y1="8.5" x2="26" y2="91.5" stroke="white" opacity="0.2" /> <line x1="8.5" y1="26" x2="91.5" y2="74" stroke="white" opacity="0.2" /> <line x1="8.5" y1="74" x2="91.5" y2="26" stroke="white" opacity="0.2" /> </svg>
-
-                    <div class="planet-layer" id="planet-layer">
-                        </div>
-                </div>
-                <p style="font-size: 0.8rem; color: #aaa;">鼠标悬停图标查看相位详情</p>
+            <div class="glass-card chart-wrapper">
+                <svg id="zodiac-wheel" class="zodiac-svg" viewBox="0 0 200 200">
+                    </svg>
+                <div id="planet-layer"></div>
             </div>
 
-            <div class="glass-card" id="basic-report">
-                <h3 style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">基础解读</h3>
-                <div class="astro-row">
-                    <div class="astro-icon">☀️</div>
-                    <div class="astro-content">
-                        <h4 id="txt-sun">太阳：--</h4>
-                        <p id="desc-sun">加载中...</p>
-                    </div>
+            <div class="glass-card" style="text-align: left;">
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--gold); font-size: 1.1rem;">☀️ <span id="lbl-sun">太阳</span>: </strong>
+                    <span id="val-sun">--</span>
+                    <p style="font-size: 0.9rem; color: #ccc; margin-top: 5px;" id="desc-sun">--</p>
                 </div>
-                <div class="astro-row">
-                    <div class="astro-icon">🌙</div>
-                    <div class="astro-content">
-                        <h4 id="txt-moon">月亮：--</h4>
-                        <p id="desc-moon">需精确时间...</p>
-                    </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--gold); font-size: 1.1rem;">🌙 <span id="lbl-moon">月亮</span>: </strong>
+                    <span id="val-moon">--</span>
+                    <p style="font-size: 0.9rem; color: #ccc; margin-top: 5px;" id="desc-moon">--</p>
                 </div>
-                <div class="astro-row">
-                    <div class="astro-icon">🏹</div>
-                    <div class="astro-content">
-                        <h4 id="txt-rising">上升：--</h4>
-                        <p id="desc-rising">需精确时间...</p>
-                    </div>
+                <div>
+                    <strong style="color: var(--gold); font-size: 1.1rem;">🏹 <span id="lbl-rising">上升</span>: </strong>
+                    <span id="val-rising">--</span>
+                    <p style="font-size: 0.9rem; color: #ccc; margin-top: 5px;" id="desc-rising">--</p>
                 </div>
             </div>
 
-            <div class="glass-card premium-gate" id="premium-gate">
-                <div class="premium-overlay" id="premium-overlay">
+            <div class="glass-card premium-lock-area">
+                <div class="lock-overlay" id="lock-overlay">
                     <div style="font-size: 2rem; margin-bottom: 10px;">🔒</div>
-                    <h3>升级 Premium 解锁完整命运</h3>
-                    <ul style="text-align: left; font-size: 0.9rem; color: #ddd; margin: 15px 0;">
-                        <li>🌸 2026 桃花/正缘详细预测</li>
-                        <li>💑 双人合盘兼容性测试</li>
-                        <li>📅 未来12个月运势流年</li>
-                        <li>📄 下载 PDF 完整报告</li>
-                    </ul>
-                    <button class="btn-unlock" onclick="handlePayment()">立即解锁 (￥19.9)</button>
+                    <h3 id="i18n-premium-title">解锁 Premium 深度报告</h3>
+                    <p style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 15px;" id="i18n-premium-subtitle">
+                        包含：2026 桃花正缘 · 双人合盘 · 完整 PDF
+                    </p>
+                    <button class="btn-premium" onclick="unlockPremium()" id="btn-unlock">
+                        立即解锁 (￥19.9)
+                    </button>
                 </div>
 
-                <div class="blur-content">
-                    <h3>2026 桃花运势</h3>
-                    <p>你的正缘将在今年...</p>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-                    <h3>兼容性测试</h3>
+                <div class="blur-preview">
+                    <h3>2026 LOVE FORECAST</h3>
+                    <p>Lorem ipsum dolor sit amet...</p>
+                    <p>Your soulmate is likely a Fire Sign...</p>
                 </div>
 
-                <div id="premium-content">
-                    <div style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 15px;">
-                        <h3 style="color: #ff6b6b;">🌸 2026 桃花运专篇</h3>
-                        <p id="premium-love-text" style="font-size: 0.95rem; line-height: 1.6; margin-top: 10px; text-align: left;">
-                            </p>
-                    </div>
+                <div id="premium-content" style="display: none; padding: 20px; text-align: left;">
+                    <h3 style="color: #ff00cc; margin-bottom: 10px;">🌸 <span id="i18n-love-title">2026 桃花运势</span></h3>
+                    <div id="love-forecast-text" style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;"></div>
 
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #4ecdc4;">💑 兼容性测试</h3>
-                        <div class="compatibility-form">
-                            <input type="date" id="partner-dob" style="margin-bottom: 10px;">
-                            <button class="btn-main" style="padding: 8px; font-size: 0.9rem;" onclick="checkCompatibility()">开始比对</button>
-                            <div id="comp-result" style="margin-top: 10px; font-weight: bold; color: var(--gold);"></div>
+                    <div class="match-card">
+                        <h4 style="color: var(--gold); margin-bottom: 10px;">💑 <span id="i18n-match-title">双人合盘兼容度</span></h4>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="date" id="partner-date">
+                            <button class="btn-main" style="margin: 0; padding: 5px 15px; font-size: 0.8rem;" onclick="calcMatch()" id="btn-match">Match</button>
                         </div>
+                        <div id="match-result" style="margin-top: 10px; font-weight: bold;"></div>
                     </div>
 
-                    <button class="btn-main btn-ghost" onclick="generatePDF()">📥 下载 PDF 完整报告</button>
+                    <button class="btn-main" style="background: transparent; border: 1px solid #fff; margin-top: 20px;" onclick="downloadPDF()">
+                        📥 <span id="btn-pdf">下载完整 PDF 报告</span>
+                    </button>
                 </div>
             </div>
 
-            <button class="btn-main btn-ghost" onclick="resetForm()">🔄 再测一次</button>
+            <p style="font-size: 0.7rem; color: #888; margin-top: 30px;" id="footer-text">
+                仅供娱乐参考 · Mock Mode Active
+            </p>
         </div>
-
-        <footer style="margin-top: 40px; font-size: 0.7rem; color: rgba(255,255,255,0.4);">
-            <p>本网站仅供娱乐参考，非专业预测。<br>Mock API Mode Active.</p>
-        </footer>
     </div>
 
     <script>
-        // --- 配置与常量 ---
-        const USE_REAL_API = false; // ⚠️ 改为 true 并填写下方 Key 启用真实请求
-        const API_KEY = 'YOUR_API_KEY_HERE'; 
-        const API_ENDPOINT = 'https://api.astrologyapi.com/v1/natal_chart'; // 示例端点
+        // --- 配置 ---
+        const USE_REAL_API = false; // ⚠️ 改为 true 启用 fetch
+        const API_KEY = 'YOUR_KEY_HERE'; // https://freeastrologyapi.com/ 注册
+        const API_URL = 'https://json.freeastrologyapi.com/planets';
 
-        // 星座基础数据
-        const ZODIAC = [
-            { name: "白羊座", dates: [321, 419], desc: "热情如火，行动力极强，是天生的开拓者。" },
-            { name: "金牛座", dates: [420, 520], desc: "稳重务实，对美与物质有极高的鉴赏力。" },
-            { name: "双子座", dates: [521, 621], desc: "思维敏捷，沟通能力强，拥有有趣的灵魂。" },
-            { name: "巨蟹座", dates: [622, 722], desc: "温柔体贴，家庭观念重，情感细腻丰富。" },
-            { name: "狮子座", dates: [723, 822], desc: "自信大方，具有王者风范，渴望成为焦点。" },
-            { name: "处女座", dates: [823, 922], desc: "追求完美，细致入微，逻辑思维严密。" },
-            { name: "天秤座", dates: [923, 1023], desc: "优雅迷人，追求平衡与和谐，社交高手。" },
-            { name: "天蝎座", dates: [1024, 1122], desc: "神秘深沉，直觉敏锐，意志力坚定不移。" },
-            { name: "射手座", dates: [1123, 1221], desc: "乐观开朗，崇尚自由，热爱冒险与真理。" },
-            { name: "摩羯座", dates: [1222, 119], desc: "坚韧不拔，目标明确，是现实主义的攀登者。" }, // 处理跨年逻辑需特殊
-            { name: "水瓶座", dates: [120, 218], desc: "独立独特，思维超前，富有人道主义精神。" },
-            { name: "双鱼座", dates: [219, 320], desc: "浪漫多情，想象力丰富，极具同理心。" }
-        ];
-
-        // 全局状态
-        let currentData = {
-            name: '',
-            sun: {},
-            moon: {},
-            rising: {},
-            dateStr: ''
+        // --- i18n 字典 ---
+        const TRANSLATIONS = {
+            cn: {
+                title: "星魂占卜 · 揭秘你的宇宙蓝图 ✨",
+                subtitle: "输入生日，AI解析你的灵魂·桃花·命运",
+                namePlaceholder: "你的名字",
+                lblDob: "出生日期",
+                lblTime: "出生时间 (重要)",
+                lblCity: "出生城市",
+                btnSubmit: "✨ 揭开命运面纱 ✨",
+                reportTitle: "的星盘报告",
+                sun: "太阳", moon: "月亮", rising: "上升",
+                premiumTitle: "解锁 Premium 深度报告",
+                premiumSubtitle: "包含：2026 桃花正缘 · 双人合盘 · 完整 PDF",
+                btnUnlock: "立即解锁 (￥19.9)",
+                loveTitle: "2026 桃花运势",
+                matchTitle: "双人合盘兼容度",
+                btnMatch: "开始比对",
+                btnPdf: "下载完整 PDF 报告",
+                footer: "仅供娱乐参考 · Mock Mode Active",
+                zodiacNames: ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"]
+            },
+            en: {
+                title: "Cosmic Soul Chart ✨ - Unlock Destiny",
+                subtitle: "AI Analysis of your Soul, Love & Fate based on Birth Chart",
+                namePlaceholder: "Your Name",
+                lblDob: "Date of Birth",
+                lblTime: "Birth Time (Crucial)",
+                lblCity: "City of Birth",
+                btnSubmit: "✨ Reveal My Blueprint ✨",
+                reportTitle: "'s Cosmic Report",
+                sun: "Sun", moon: "Moon", rising: "Rising",
+                premiumTitle: "Unlock Premium Insights",
+                premiumSubtitle: "Incl: 2026 Love Forecast · Compatibility · Full PDF",
+                btnUnlock: "Unlock Now ($2.99)",
+                loveTitle: "2026 Love Forecast",
+                matchTitle: "Soulmate Compatibility",
+                btnMatch: "Check Match",
+                btnPdf: "Download Full PDF Report",
+                footer: "For entertainment only · Mock Mode Active",
+                zodiacNames: ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
+            }
         };
 
-        // --- 1. 初始化与背景 ---
+        // 当前状态
+        let currentLang = 'cn';
+        let userData = {};
+
+        // --- 初始化 ---
         window.addEventListener('load', () => {
-            setTheme();
-            createStars();
+            initStars();
+            initTheme();
+            drawSVGBg(); // 绘制静态 SVG 轮盘
         });
 
-        function setTheme() {
-            const h = new Date().getHours();
-            document.body.className = (h >= 6 && h < 18) ? 'day-mode' : 'night-mode';
+        // 1. 语言切换
+        function changeLang(lang) {
+            currentLang = lang;
+            document.body.className = lang === 'cn' ? 'lang-cn' : 'lang-en';
+            
+            // 按钮样式
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 文本更新
+            const t = TRANSLATIONS[lang];
+            document.getElementById('i18n-title').textContent = t.title;
+            document.getElementById('i18n-subtitle').textContent = t.subtitle;
+            document.getElementById('username').placeholder = t.namePlaceholder;
+            document.getElementById('lbl-dob').textContent = t.lblDob;
+            document.getElementById('lbl-time').textContent = t.lblTime;
+            document.getElementById('lbl-city').textContent = t.lblCity;
+            document.getElementById('btn-submit').textContent = t.btnSubmit;
+            document.getElementById('i18n-report-title').textContent = t.reportTitle;
+            document.getElementById('lbl-sun').textContent = t.sun;
+            document.getElementById('lbl-moon').textContent = t.moon;
+            document.getElementById('lbl-rising').textContent = t.rising;
+            document.getElementById('i18n-premium-title').textContent = t.premiumTitle;
+            document.getElementById('i18n-premium-subtitle').textContent = t.premiumSubtitle;
+            document.getElementById('btn-unlock').textContent = t.btnUnlock;
+            document.getElementById('i18n-love-title').textContent = t.loveTitle;
+            document.getElementById('i18n-match-title').textContent = t.matchTitle;
+            document.getElementById('btn-match').textContent = t.btnMatch;
+            document.getElementById('btn-pdf').textContent = t.btnPdf;
+            document.getElementById('footer-text').textContent = t.footer;
         }
 
-        function createStars() {
+        // 2. 视觉效果初始化
+        function initStars() {
             const container = document.getElementById('stars-container');
-            for(let i=0; i<80; i++) {
+            for(let i=0; i<60; i++) {
                 const s = document.createElement('div');
                 s.className = 'star';
                 s.style.left = Math.random()*100 + '%';
                 s.style.top = Math.random()*100 + '%';
-                s.style.width = Math.random()*2 + 1 + 'px';
+                s.style.width = Math.random()*2 + 'px';
                 s.style.height = s.style.width;
-                s.style.setProperty('--duration', (Math.random()*3 + 2) + 's');
+                s.style.setProperty('--duration', (Math.random()*3+2)+'s');
                 container.appendChild(s);
             }
         }
 
-        // --- 2. 核心逻辑：获取数据 (API 或 Mock) ---
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            const form = document.getElementById('astro-form');
-            const name = document.getElementById('username').value || "旅行者";
-            const dateVal = document.getElementById('birthdate').value;
-            const timeVal = document.getElementById('birthtime').value;
-            const city = document.getElementById('city').value;
+        function initTheme() {
+            const h = new Date().getHours();
+            if(h >= 6 && h < 18) document.body.classList.add('day-mode');
+            else document.body.classList.add('night-mode');
+        }
 
-            if(!dateVal) return alert("请选择出生日期");
+        function drawSVGBg() {
+            const svg = document.getElementById('zodiac-wheel');
+            const cx = 100, cy = 100, r = 90;
+            const symbols = ["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
+            
+            // 绘制底圆
+            let html = `<circle cx="100" cy="100" r="${r}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1" />`;
+            
+            // 绘制12宫分割线和符号
+            for(let i=0; i<12; i++) {
+                const angle = (i * 30) * (Math.PI / 180);
+                const x1 = cx + (r-20) * Math.cos(angle);
+                const y1 = cy + (r-20) * Math.sin(angle);
+                const x2 = cx + r * Math.cos(angle);
+                const y2 = cy + r * Math.sin(angle);
+                
+                // 线条
+                html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.3)" stroke-width="1" />`;
+                
+                // 符号 (放在每格中间)
+                const textAngle = (i * 30 + 15) * (Math.PI / 180);
+                // 修正 SVG 坐标系: 0度在右边(3点钟)，通常白羊座在9点或12点。这里简化，直接按顺序排列。
+                const tx = cx + (r - 10) * Math.cos(textAngle);
+                const ty = cy + (r - 10) * Math.sin(textAngle);
+                
+                html += `<text x="${tx}" y="${ty}" fill="${i%2==0 ? '#FFD700':'#FFF'}" font-size="10" text-anchor="middle" dominant-baseline="middle" transform="rotate(${i*30+15+90}, ${tx}, ${ty})">${symbols[i]}</text>`;
+            }
+            svg.innerHTML = html;
+        }
+
+        // --- 3. 核心业务逻辑 ---
+
+        document.getElementById('astro-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('username').value || "User";
+            const date = document.getElementById('birthdate').value;
+            const time = document.getElementById('birthtime').value;
+
+            if(!date) return alert("Please select date!");
 
             // UI Loading
             document.getElementById('loader').style.display = 'block';
-            document.querySelector('.btn-main').style.display = 'none';
+            document.getElementById('btn-submit').style.display = 'none';
 
+            // 数据获取 (API or Mock)
             try {
-                let result;
-                if (USE_REAL_API && API_KEY !== 'YOUR_API_KEY_HERE') {
-                    // --- 真实 API 路径 (示例结构) ---
-                    // 注意：真实场景需要处理经纬度转换 (Geocoding)
-                    // 这里仅演示 fetch 结构
-                    /* const response = await fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Authorization': 'Basic ' + btoa(API_ID+':'+API_KEY) },
-                        body: JSON.stringify({ day, month, year, hour, min, lat, lon, tzone })
-                    });
-                    result = await response.json(); 
-                    */
-                   throw new Error("API未配置，转入Mock"); // 演示用，强制跳过
-                } else {
-                    // --- Mock 路径 (本地计算 + 随机模拟) ---
-                    await new Promise(r => setTimeout(r, 1200)); // 假装网络延迟
-                    result = calculateMockData(dateVal, timeVal, city);
-                }
-
-                // 更新全局状态
-                currentData.name = name;
-                currentData.dateStr = dateVal;
-                currentData.sun = result.sun;
-                currentData.moon = result.moon;
-                currentData.rising = result.rising;
-
-                renderResult();
-
+                const data = await fetchAstroData(date, time);
+                userData = { name, ...data }; // 存入全局
+                renderResults();
             } catch (err) {
                 console.error(err);
-                alert("连接宇宙信号失败，请稍后重试。");
+                alert("Connection Error. Using Offline Oracle.");
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
+        });
+
+        async function fetchAstroData(dateStr, timeStr) {
+            // 真实 API 逻辑结构
+            if (USE_REAL_API) {
+                try {
+                    // 示例：这里需要真实的 Request Body
+                    /* const res = await fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ date: dateStr, time: timeStr, api_key: API_KEY }) 
+                    });
+                    return await res.json();
+                    */
+                   throw new Error("Key not configured");
+                } catch (e) {
+                    console.warn("API fail, fallback mock");
+                    return getMockData(dateStr, timeStr);
+                }
+            } else {
+                // 模拟延迟
+                await new Promise(r => setTimeout(r, 1500));
+                return getMockData(dateStr, timeStr);
+            }
         }
 
-        // --- 本地模拟算法 ---
-        function calculateMockData(dateStr, timeStr, city) {
-            const date = new Date(dateStr);
-            const m = date.getMonth() + 1;
-            const d = date.getDate();
-            const md = m * 100 + d;
-
-            // 1. 太阳星座 (准确)
-            let sunSign = ZODIAC.find(z => z.name === "摩羯座"); // Default
-            for(let z of ZODIAC) {
-                if(z.name !== "摩羯座") {
-                    if(md >= z.dates[0] && md <= z.dates[1]) sunSign = z;
-                } else {
-                    if(md >= 1222 || md <= 119) sunSign = z;
-                }
-            }
+        function getMockData(dateStr, timeStr) {
+            const d = new Date(dateStr);
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
             
-            // 2. 月亮/上升 (基于哈希的伪随机，保证同一时间输入结果一致)
-            // 如果没填时间，给一个随机值
-            const seed = dateStr + (timeStr || "12:00") + (city || "Default");
+            // 太阳星座简易计算
+            const sunIdx = getZodiacIndex(m, day);
+            
+            // 模拟其他行星 (基于Hash)
+            const seed = dateStr + (timeStr || "12:00");
             const hash = seed.split('').reduce((a,b)=>a+b.charCodeAt(0),0);
             
-            const moonIndex = (hash + 2) % 12;
-            const risingIndex = (hash + 7) % 12;
-
-            // 模拟度数 (0-360) 用于SVG显示
-            const sunDeg = getDegree(sunSign.name); // 简化：直接取星座中间度数
-            const moonDeg = Math.random() * 360; 
-            const risingDeg = Math.random() * 360;
-
             return {
-                sun: { ...sunSign, degree: sunDeg },
-                moon: { ...ZODIAC[moonIndex], degree: moonDeg },
-                rising: { ...ZODIAC[risingIndex], degree: risingDeg }
+                sun: { index: sunIdx, degree: sunIdx * 30 + 15 },
+                moon: { index: (hash+2)%12, degree: Math.random()*360 },
+                rising: { index: (hash+7)%12, degree: Math.random()*360 },
+                mercury: { index: (sunIdx+1)%12, degree: ((sunIdx+1)%12)*30 + 10 },
+                venus: { index: (sunIdx-1+12)%12, degree: ((sunIdx-1+12)%12)*30 + 20 }
             };
         }
 
-        function getDegree(signName) {
-            const idx = ZODIAC.findIndex(z => z.name === signName);
-            // 每个星座30度，取中间15度
-            // 白羊座从0度开始
-            // 修正顺序：白羊(0), 金牛(1)...
-            // ZODIAC 数组顺序并不是标准的 0-11 顺序 (摩羯在中间)，这里简单处理：
-            const standardOrder = ["白羊座","金牛座","双子座","巨蟹座","狮子座","处女座","天秤座","天蝎座","射手座","摩羯座","水瓶座","双鱼座"];
-            const realIdx = standardOrder.indexOf(signName);
-            return realIdx * 30 + 15;
+        function getZodiacIndex(m, d) {
+            const days = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 22, 22]; // 结束日期
+            // 0=Aquarius start index logic... 修正为标准：0=Aries (3.21)
+            // 简化版：
+            // 摩羯(0), 水瓶(1), 双鱼(2), 白羊(3)... 
+            // 这里我们用标准数组 TRANSLATIONS.cn.zodiacNames (0=白羊)
+            // 白羊 3.21-4.19
+            if((m==3 && d>=21) || (m==4 && d<=19)) return 0;
+            if((m==4 && d>=20) || (m==5 && d<=20)) return 1;
+            if((m==5 && d>=21) || (m==6 && d<=21)) return 2;
+            if((m==6 && d>=22) || (m==7 && d<=22)) return 3;
+            if((m==7 && d>=23) || (m==8 && d<=22)) return 4;
+            if((m==8 && d>=23) || (m==9 && d<=22)) return 5;
+            if((m==9 && d>=23) || (m==10 && d<=23)) return 6;
+            if((m==10 && d>=24) || (m==11 && d<=22)) return 7;
+            if((m==11 && d>=23) || (m==12 && d<=21)) return 8;
+            if((m==12 && d>=22) || (m==1 && d<=19)) return 9; // Cap
+            if((m==1 && d>=20) || (m==2 && d<=18)) return 10;
+            return 11; // Pisces
         }
 
+        // 4. 渲染结果
+        function renderResults() {
+            const t = TRANSLATIONS[currentLang];
+            const signs = t.zodiacNames;
 
-        // --- 3. 渲染结果 ---
-        function renderResult() {
-            // 隐藏表单，显示结果
+            // 文本填充
             document.getElementById('input-card').style.display = 'none';
-            const resSec = document.getElementById('result-section');
-            resSec.style.display = 'block';
+            document.querySelector('header').style.display = 'none'; // 简化界面
+            document.getElementById('result-section').style.display = 'block';
+            setTimeout(()=>document.getElementById('result-section').classList.add('fade-in'), 50);
+
+            document.getElementById('res-name-display').textContent = userData.name;
             
-            // 名字
-            document.getElementById('res-name').innerText = currentData.name;
+            // 填充三宫
+            const sName = signs[userData.sun.index];
+            const mName = signs[userData.moon.index];
+            const rName = signs[userData.rising.index];
 
-            // 基础文本
-            document.getElementById('txt-sun').innerText = `太阳 in ${currentData.sun.name}`;
-            document.getElementById('desc-sun').innerText = currentData.sun.desc;
+            document.getElementById('val-sun').textContent = sName;
+            document.getElementById('desc-sun').textContent = currentLang === 'cn' ? "你的核心自我与生命目标。" : "Your core ego and life purpose.";
+            
+            document.getElementById('val-moon').textContent = mName;
+            document.getElementById('desc-moon').textContent = currentLang === 'cn' ? "你的情感需求与潜意识。" : "Your emotional needs and subconscious.";
+            
+            document.getElementById('val-rising').textContent = rName;
+            document.getElementById('desc-rising').textContent = currentLang === 'cn' ? "你的面具与他人第一印象。" : "Your social mask and first impressions.";
 
-            document.getElementById('txt-moon').innerText = `月亮 in ${currentData.moon.name}`;
-            document.getElementById('desc-moon').innerText = `内在安全感来源。${currentData.moon.desc}`;
-
-            document.getElementById('txt-rising').innerText = `上升 in ${currentData.rising.name}`;
-            document.getElementById('desc-rising').innerText = `给他人的第一印象。${currentData.rising.desc}`;
-
-            // 渲染行星在轮盘上的位置
+            // 放置行星 (Visualization)
             const layer = document.getElementById('planet-layer');
-            layer.innerHTML = ''; // 清空
+            layer.innerHTML = '';
             
-            // 添加行星图标
-            addPlanetToWheel(layer, 'sun', '☀️', currentData.sun.degree, currentData.sun.name);
-            addPlanetToWheel(layer, 'moon', '🌙', currentData.moon.degree, currentData.moon.name);
-            addPlanetToWheel(layer, 'rising', '🏹', currentData.rising.degree, currentData.rising.name);
-
-            // 淡入动画
-            setTimeout(() => resSec.classList.add('fade-in'), 50);
+            addPlanet(layer, 'sun', '☀️', userData.sun.degree, sName, currentLang==='cn'?"核心能量":"Core Energy");
+            addPlanet(layer, 'moon', '🌙', userData.moon.degree, mName, currentLang==='cn'?"情绪安全感":"Emotions");
+            addPlanet(layer, 'rising', '🏹', userData.rising.degree, rName, currentLang==='cn'?"人格面具":"Persona");
+            addPlanet(layer, 'mercury', '☿️', userData.mercury.degree, signs[userData.mercury.index], "Communication");
+            addPlanet(layer, 'venus', '♀️', userData.venus.degree, signs[userData.venus.index], "Love & Values");
         }
 
-        function addPlanetToWheel(container, type, icon, degree, signName) {
-            // 创建旋转臂
+        function addPlanet(container, type, iconChar, degree, sign, desc) {
             const marker = document.createElement('div');
             marker.className = 'planet-marker';
-            // 旋转角度：SVG 0度通常在3点钟或12点钟方向，这里假设12点为0度
-            marker.style.transform = `rotate(${degree}deg)`;
+            marker.style.transform = `rotate(${degree}deg)`; // 旋转角度定位
 
-            // 创建图标
-            const iconDiv = document.createElement('div');
-            iconDiv.className = `planet-icon ${type}`;
-            iconDiv.innerHTML = icon;
-            // 图标反向旋转以保持直立 (可选，这里不反转让它随轮盘转更有趣，或者反转保持正向)
-            iconDiv.style.transform = `rotate(-${degree}deg)`; 
-
+            const icon = document.createElement('div');
+            icon.className = 'planet-icon';
+            icon.innerHTML = iconChar;
+            icon.style.transform = `rotate(-${degree}deg)`; // 反向旋转保持图标直立
+            
             // Tooltip
             const tip = document.createElement('div');
-            tip.className = 'tooltip';
-            tip.innerText = `${type === 'sun' ? '太阳' : type === 'moon' ? '月亮' : '上升'} in ${signName} (${Math.floor(degree)}°)`;
+            tip.className = 'astro-tooltip';
+            tip.innerHTML = `<strong>${type.toUpperCase()} in ${sign}</strong><br>${desc}`;
             
-            iconDiv.appendChild(tip);
-            marker.appendChild(iconDiv);
+            icon.appendChild(tip);
+            marker.appendChild(icon);
             container.appendChild(marker);
         }
 
-        // --- 4. Premium 功能 ---
-        function handlePayment() {
-            // 模拟支付
-            if(confirm("正在连接 Stripe 支付网关...\n(模拟：支付 19.9 元解锁)")) {
-                unlockPremium();
+        // --- 5. Premium 功能 ---
+        function unlockPremium() {
+            alert(currentLang === 'cn' ? "模拟支付成功！欢迎尊贵的会员。" : "Payment Mock Success! Welcome Premium User.");
+            
+            document.getElementById('lock-overlay').style.display = 'none';
+            document.querySelector('.blur-preview').style.display = 'none';
+            document.getElementById('premium-content').style.display = 'block';
+
+            // 生成运势文案
+            const t = TRANSLATIONS[currentLang];
+            const signs = t.zodiacNames;
+            // 简单逻辑：正缘是金星的下一个星座
+            const loveSign = signs[(userData.venus.index + 1) % 12];
+            const month = Math.floor(Math.random() * 12) + 1;
+            
+            const textCN = `根据你的星盘，2026年你的桃花运将在 <strong>${month}月</strong> 达到巅峰。你的正缘极有可能是 <strong>${loveSign}</strong>，对方特质：成熟稳重，但在感情中略显被动。建议多参加职场社交或老友聚会。`;
+            const textEN = `Based on your Venus placement, your love luck peaks in <strong>Month ${month}</strong>, 2026. Your soulmate is likely a <strong>${loveSign}</strong>. Traits: Grounded but shy. Look out for connections at work.`;
+
+            document.getElementById('love-forecast-text').innerHTML = currentLang === 'cn' ? textCN : textEN;
+        }
+
+        function calcMatch() {
+            const pDate = document.getElementById('partner-date').value;
+            if(!pDate) return alert("Select Date");
+            const score = Math.floor(Math.random() * 40) + 60; // 60-100
+            const el = document.getElementById('match-result');
+            if(currentLang === 'cn') {
+                el.innerHTML = `匹配度：<span style="color:#ff00cc; font-size:1.2rem;">${score}%</span><br>${score>85?'灵魂伴侣！':'还需要磨合哦。'}`;
+            } else {
+                el.innerHTML = `Compatibility: <span style="color:#ff00cc; font-size:1.2rem;">${score}%</span><br>${score>85?'Soulmates!':'Needs work.'}`;
             }
         }
 
-        function unlockPremium() {
-            const overlay = document.getElementById('premium-overlay');
-            const blurContent = document.querySelector('.blur-content');
-            const realContent = document.getElementById('premium-content');
-
-            overlay.style.display = 'none';
-            blurContent.style.display = 'none';
-            realContent.style.display = 'block';
-
-            // 生成桃花运文案
-            const loveText = `亲爱的${currentData.name}，基于你的金星与${currentData.sun.name}能量，2026年你的桃花运势将在**5月和11月**达到顶峰。你的正缘可能具有${currentData.rising.name}的特质，比如${currentData.rising.desc.substring(0,6)}... \n\n建议：多留意职场或学习场所的相遇。`;
-            document.getElementById('premium-love-text').innerText = loveText;
-        }
-
-        function checkCompatibility() {
-            const pDate = document.getElementById('partner-dob').value;
-            if(!pDate) return alert("请输入对方生日");
-            
-            const scores = [78, 85, 92, 65, 40, 98];
-            const score = scores[Math.floor(Math.random()*scores.length)];
-            const text = score > 80 ? "天作之合！灵魂共鸣极强。" : score > 60 ? "欢喜冤家，需要多沟通。" : "挑战很大，但真爱无敌。";
-            
-            document.getElementById('comp-result').innerHTML = `匹配度：<span style="font-size:1.2rem; color:#ff6b6b">${score}%</span><br>${text}`;
-        }
-
-        // --- 5. PDF 生成 ---
-        function generatePDF() {
+        function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
-            // 设置字体 (jsPDF默认不支持中文，需要自定义字体，这里为演示简化用英文或简易处理)
-            // *真实生产环境需引入 .ttf 字体文件支持中文*
-            // 这里为了代码可运行性，我们用英文输出或者提示
             
+            // ⚠️ PDF 只能显示英文 (除非加载 base64 字体文件)
+            // 所以这里即使在中文模式也输出英文报告，或者转写
+            
+            doc.setFont("helvetica", "bold");
             doc.setFontSize(22);
-            doc.text("Astro Report 2026", 20, 20);
+            doc.text("Cosmic Soul Report 2026", 20, 20);
+            
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Name: ${userData.name}`, 20, 40);
+            doc.text(`Sun Sign: ${document.getElementById('val-sun').textContent} (Calculated)`, 20, 50);
+            doc.text(`Moon Sign: ${document.getElementById('val-moon').textContent}`, 20, 60);
+            doc.text(`Rising Sign: ${document.getElementById('val-rising').textContent}`, 20, 70);
+            
+            doc.setLineWidth(0.5);
+            doc.line(20, 80, 190, 80);
             
             doc.setFontSize(16);
-            doc.text(`Name: ${currentData.name || 'User'}`, 20, 40);
+            doc.text("Premium Insights", 20, 95);
             
             doc.setFontSize(12);
-            doc.text(`Sun Sign: ${currentData.sun.name}`, 20, 60);
-            doc.text(`Moon Sign: ${currentData.moon.name}`, 20, 70);
-            doc.text(`Rising Sign: ${currentData.rising.name}`, 20, 80);
+            const loveText = document.getElementById('love-forecast-text').innerText;
+            // 简单的正则替换移除中文，或者写死英文 Fallback
+            const pdfBody = currentLang === 'cn' 
+                ? "Note: Full Chinese character support requires font loading.\nYour love luck peaks this year. Your potential partner is likely stable and grounded." 
+                : loveText;
+                
+            const splitText = doc.splitTextToSize(pdfBody, 170);
+            doc.text(splitText, 20, 105);
             
-            doc.text("Love Forecast (Premium):", 20, 100);
-            const loveLines = doc.splitTextToSize("Your love luck peaks in May 2026. Look for someone grounded and stable.", 170);
-            doc.text(loveLines, 20, 110);
-
-            doc.save('my_astro_chart.pdf');
-            alert("PDF 下载已开始！(注：标准版jsPDF仅支持英文字符，中文需加载字体文件)");
+            doc.save("Astro_Report_2026.pdf");
         }
-
-        function resetForm() {
-            document.getElementById('astro-form').reset();
-            document.getElementById('result-section').style.display = 'none';
-            document.getElementById('result-section').classList.remove('fade-in');
-            document.getElementById('input-card').style.display = 'block';
-            document.querySelector('.btn-main').style.display = 'block';
-            
-            // 重置 Premium 状态
-            document.getElementById('premium-overlay').style.display = 'flex';
-            document.querySelector('.blur-content').style.display = 'block';
-            document.getElementById('premium-content').style.display = 'none';
-        }
-
-        // 绑定事件
-        document.getElementById('astro-form').addEventListener('submit', handleFormSubmit);
-
     </script>
 </body>
 </html>
